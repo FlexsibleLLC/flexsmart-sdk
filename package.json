@@ -9,7 +9,8 @@
     "dist"
   ],
   "scripts": {
-    "compile": "rm -rf dist && tsc --watch"
+    "compile": "rm -rf dist && tsc",
+    "dev": "rm -rf dist && tsc --watch"
   },
   "author": "",
   "license": "ISC",
