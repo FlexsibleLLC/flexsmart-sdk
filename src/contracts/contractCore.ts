@@ -43,12 +43,10 @@ export class ContractCore<T extends BaseContract> extends RPCConnection {
         this.writableContract.functions as any
       )[funcName];
 
-      console.log('hiiiiii', contractFunc, this.writableContract.functions);
       let transaction: ContractTransaction;
       try {
         transaction = await contractFunc(...args);
       } catch (e) {
-        console.log('here errrrrr', e);
         // TODO: handle error
       }
 
