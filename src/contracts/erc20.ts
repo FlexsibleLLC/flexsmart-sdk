@@ -48,4 +48,21 @@ export class Erc20<T extends BaseContract> {
     const decimals = await this.contractCore.readonlyContract.decimals();
     return utils.formatUnits(amount, decimals);
   }
+
+  public async burnFrom(holderAddress: string, amount: string): Promise<any> {
+    return {
+      receipt: await this.contractCore.sendTransaction('burnFrom', [
+        holderAddress,
+        await this.normalizeAmount(amount),
+      ]),
+    };
+  }
+
+  public async burn(amount: string): Promise<any> {
+    return {
+      receipt: await this.contractCore.sendTransaction('burn', [
+        await this.normalizeAmount(amount),
+      ]),
+    };
+  }
 }
