@@ -6,7 +6,9 @@ export class RPCConnection {
   private signer: Signer | undefined;
 
   constructor(providerOrSigner: ProviderOrSigner) {
-    [this.provider, this.signer] = this.getProviderAndSigner(providerOrSigner);
+    const [provider, signer] = this.getProviderAndSigner(providerOrSigner);
+    this.signer = signer;
+    this.provider = provider;
   }
 
   private getProviderAndSigner(
@@ -33,7 +35,9 @@ export class RPCConnection {
   }
 
   public updateProviderOrSigner(providerOrSigner: ProviderOrSigner) {
-    [this.provider, this.signer] = this.getProviderAndSigner(providerOrSigner);
+    const [provider, signer] = this.getProviderAndSigner(providerOrSigner);
+    this.provider = provider;
+    this.signer = signer;
   }
 
   public getSigner(): Signer | undefined {

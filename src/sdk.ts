@@ -2,6 +2,8 @@ import { providers, Signer, Wallet } from 'ethers';
 import { RPCConnection } from './rpcConnection';
 import { ProviderOrSigner } from './types';
 import { FlexsmartWallet } from './wallet';
+import erc20ABI from './abis/erc20.json';
+import { ContractBuilder } from './contracts/contractBuilder';
 
 export class FlexsmartSDK {
   private rpcConnection: RPCConnection;
@@ -21,15 +23,29 @@ export class FlexsmartSDK {
 
   static fromPrivateKey(
     privateKey: string,
-    provider: providers.Provider
+    providerOrNetwork: providers.Provider | string
   ): FlexsmartSDK {
+    const provider =
+      typeof providerOrNetwork === 'string'
+        ? new providers.JsonRpcProvider(providerOrNetwork)
+        : (providerOrNetwork as providers.Provider);
+
     const signer = new Wallet(privateKey, provider);
     return FlexsmartSDK.fromSigner(signer);
   }
 
   public updateSignerOrProvider(providerOrSigner: ProviderOrSigner) {
+    this.providerOrSigner = providerOrSigner;
     this.rpcConnection.updateProviderOrSigner(providerOrSigner);
 
     // TODO: update more things and reconnect on the wallet.
+  }
+
+  public async getContract(address: string) {
+    try {
+      return new ContractBuilder(address, this.providerOrSigner, erc20ABI.abi);
+    } catch (err) {
+      // TODO: handle this err properly
+    }
   }
 }
