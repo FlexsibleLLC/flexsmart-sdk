@@ -9,3 +9,4 @@
 - Normalize currency amounts, add helpers and new types to handle it.
 - Add types for the any returns.
 - Add a base contract to contain share functionality between type of tokens.
+- Add required function and custom error types to handle validations
