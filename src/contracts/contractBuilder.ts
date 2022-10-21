@@ -6,6 +6,7 @@ import { Erc20 } from './erc20';
 export class ContractBuilder<T extends BaseContract> {
   private contractCore: ContractCore<T>;
   private abi: ContractInterface;
+  private address: string;
 
   constructor(
     address: string,
@@ -15,9 +16,17 @@ export class ContractBuilder<T extends BaseContract> {
   ) {
     this.contractCore = contractCore;
     this.abi = abi;
+    this.address = address;
   }
 
-  getERC20() {
-    return new Erc20(this.contractCore);
+  getERC20(contractsCache: Map<string, Erc20<BaseContract>>) {
+    if (contractsCache.has(this.address)) {
+      return contractsCache.get(this.address);
+    }
+
+    const erc20 = new Erc20(this.contractCore);
+    contractsCache.set(this.address, erc20);
+
+    return erc20;
   }
 }

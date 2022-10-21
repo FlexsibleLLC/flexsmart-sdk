@@ -34,6 +34,10 @@ export class RPCConnection {
     return [provider, signer];
   }
 
+  public getSignerOrProvider(): Signer | providers.Provider {
+    return this.getSigner() || this.getProvider();
+  }
+
   public updateProviderOrSigner(providerOrSigner: ProviderOrSigner) {
     const [provider, signer] = this.getProviderAndSigner(providerOrSigner);
     this.provider = provider;

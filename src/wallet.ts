@@ -27,4 +27,9 @@ export class FlexsmartWallet {
 
     return await signer.getAddress();
   }
+
+  public connect(providerOrSigner: ProviderOrSigner) {
+    this.rpcConnection.updateProviderOrSigner(providerOrSigner);
+    // emit event to reflect this
+  }
 }
