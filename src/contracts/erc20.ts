@@ -1,12 +1,16 @@
 import { BaseContract, utils, BigNumber, BigNumberish } from 'ethers';
-import { ProviderOrSigner } from '../types';
+import { ProviderOrSigner, features, ABI } from '../types';
 import { ContractCore } from './contractCore';
+import { getFeatures } from '../utils/abi';
 
 export class Erc20<T extends BaseContract> {
   private contractCore: ContractCore<T>;
 
+  private contractFeatures: features;
+
   constructor(contractCore: ContractCore<T>) {
     this.contractCore = contractCore;
+    this.contractFeatures = getFeatures(contractCore.abi as ABI);
   }
 
   // TODO: use a base contract class to handle this share functionality
@@ -14,10 +18,12 @@ export class Erc20<T extends BaseContract> {
     this.contractCore.updateProviderOrSigner(providerOrSigner);
   }
 
-  // TODO: validate the contract capabilities before sending a transaction
   // TODO: add currency custom type to be returned on the methods that needs it
-  // TODO: fetch decimals and other metadata for return a more a accurate value
   public async mint(to: string, amount: string): Promise<any> {
+    if (!this.contractFeatures.mintable) {
+      throw new Error('contract is not mintable');
+    }
+
     return {
       receipt: await this.contractCore.sendTransaction('mint', [
         to,
@@ -56,6 +62,10 @@ export class Erc20<T extends BaseContract> {
   }
 
   public async burnFrom(holderAddress: string, amount: string): Promise<any> {
+    if (!this.contractFeatures.mintable) {
+      throw new Error('contract is not burnable');
+    }
+
     return {
       receipt: await this.contractCore.sendTransaction('burnFrom', [
         holderAddress,
@@ -65,6 +75,10 @@ export class Erc20<T extends BaseContract> {
   }
 
   public async burn(amount: string): Promise<any> {
+    if (!this.contractFeatures.mintable) {
+      throw new Error('contract is not burnable');
+    }
+
     return {
       receipt: await this.contractCore.sendTransaction('burn', [
         await this.normalizeAmount(amount),
