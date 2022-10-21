@@ -33,6 +33,19 @@ export class ContractCore<T extends BaseContract> extends RPCConnection {
     ) as T;
   }
 
+  public override updateProviderOrSigner(
+    providerOrSigner: ProviderOrSigner
+  ): void {
+    super.updateProviderOrSigner(providerOrSigner);
+    this.writableContract = this.writableContract.connect(
+      this.getSignerOrProvider()
+    ) as T;
+    // setup the read only contract
+    this.readonlyContract = this.writableContract.connect(
+      this.getProvider()
+    ) as T;
+  }
+
   public async sendTransaction(
     funcName: string,
     args: any[]
@@ -56,5 +69,15 @@ export class ContractCore<T extends BaseContract> extends RPCConnection {
 
       return receipt;
     }
+  }
+
+  public async getSignerAddress(): Promise<string> {
+    const signer = this.getSigner();
+    if (!signer) {
+      // TODO: find a more friendly message
+      throw new Error('No valid signer connected. Plese');
+    }
+
+    return await signer.getAddress();
   }
 }

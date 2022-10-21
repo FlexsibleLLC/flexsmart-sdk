@@ -1,14 +1,16 @@
-import { providers, Signer, Wallet } from 'ethers';
+import { providers, Signer, Wallet, BaseContract } from 'ethers';
 import { RPCConnection } from './rpcConnection';
 import { ProviderOrSigner } from './types';
 import { FlexsmartWallet } from './wallet';
 import erc20ABI from './abis/erc20.json';
 import { ContractBuilder } from './contracts/contractBuilder';
+import { Erc20 } from './contracts/erc20';
 
 export class FlexsmartSDK {
   private rpcConnection: RPCConnection;
   private providerOrSigner: ProviderOrSigner;
   public wallet: FlexsmartWallet;
+  private contractsCache = new Map<string, Erc20<BaseContract>>();
 
   constructor(providerOrSigner: ProviderOrSigner) {
     this.rpcConnection = new RPCConnection(providerOrSigner);
@@ -37,8 +39,11 @@ export class FlexsmartSDK {
   public updateSignerOrProvider(providerOrSigner: ProviderOrSigner) {
     this.providerOrSigner = providerOrSigner;
     this.rpcConnection.updateProviderOrSigner(providerOrSigner);
+    this.wallet.connect(this.providerOrSigner);
 
-    // TODO: update more things and reconnect on the wallet.
+    for (const [, contract] of this.contractsCache) {
+      contract.onNetworkUpdated(providerOrSigner);
+    }
   }
 
   public async getContract(address: string) {

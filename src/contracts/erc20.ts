@@ -1,4 +1,5 @@
 import { BaseContract, utils, BigNumber, BigNumberish } from 'ethers';
+import { ProviderOrSigner } from '../types';
 import { ContractCore } from './contractCore';
 
 export class Erc20<T extends BaseContract> {
@@ -6,6 +7,11 @@ export class Erc20<T extends BaseContract> {
 
   constructor(contractCore: ContractCore<T>) {
     this.contractCore = contractCore;
+  }
+
+  // TODO: use a base contract class to handle this share functionality
+  onNetworkUpdated(providerOrSigner: ProviderOrSigner): void {
+    this.contractCore.updateProviderOrSigner(providerOrSigner);
   }
 
   // TODO: validate the contract capabilities before sending a transaction
@@ -63,6 +69,37 @@ export class Erc20<T extends BaseContract> {
       receipt: await this.contractCore.sendTransaction('burn', [
         await this.normalizeAmount(amount),
       ]),
+    };
+  }
+
+  public async setAllowance(spender: string, amount: string): Promise<any> {
+    return {
+      receipt: await this.contractCore.sendTransaction('approve', [
+        spender,
+        await this.normalizeAmount(amount),
+      ]),
+    };
+  }
+
+  public async allowanceOf(owner: string, spender: string): Promise<any> {
+    const allowanceAmount = await this.contractCore.readonlyContract.allowance(
+      owner,
+      spender
+    );
+
+    return await this.formatAmount(allowanceAmount);
+  }
+
+  public async allowance(spender: string): Promise<any> {
+    return await this.allowanceOf(
+      await this.contractCore.getSignerAddress(),
+      spender
+    );
+  }
+
+  public async rawTransaction(name: string, ...params: any): Promise<any> {
+    return {
+      receipt: await this.contractCore.sendTransaction(name, params),
     };
   }
 }
