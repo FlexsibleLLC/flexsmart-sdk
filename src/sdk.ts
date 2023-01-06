@@ -9,6 +9,7 @@ import { Erc20 } from './contracts/erc20';
 import axios from 'axios';
 import { CONTRACTS } from './constants/endpoints';
 import { toErc20Supply } from './utils/conversions';
+import { getABIFromName } from './utils/abi';
 
 export class FlexsmartSDK {
   private rpcConnection: RPCConnection;
@@ -52,9 +53,11 @@ export class FlexsmartSDK {
     }
   }
 
-  public async getContract(address: string) {
+  public async getContract(address: string, name: string) {
     try {
-      return new ContractBuilder(address, this.providerOrSigner, erc20ABI.abi);
+      const abi = await getABIFromName(name);
+      if (!abi) throw new Error(`${name} does not exists`);
+      return new ContractBuilder(address, this.providerOrSigner, abi.abi);
     } catch (err) {
       throw new Error(`contract can not be instanciated: ${err}`);
     }

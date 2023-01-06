@@ -1,4 +1,5 @@
 import { ABI, IABIItem, features } from '../types';
+import path, { dirname } from 'path';
 
 const nameToFeature = {
   mint: 'mintable',
@@ -24,4 +25,14 @@ export const getFeatures = (abi: ABI) => {
       pausable: false,
     }
   );
+};
+
+export const getABIFromName = async (name: string) => {
+  const abisMap = '{}';
+  const parsedABIsMap = JSON.parse(abisMap);
+    if (!parsedABIsMap.hasOwnProperty(name)) {
+    return '';
+  }
+
+  return parsedABIsMap[name];
 };
