@@ -75,6 +75,7 @@ const getFunction = (name: string, inputs: string[], readonly: boolean = false, 
 const getClass = (name: string, functions: string): string => {
     return `
         export class ${name} { 
+            static contractName = '${name}';
             constructor(contractCore) {
                 this.contractCore = contractCore;
             }
@@ -98,23 +99,25 @@ const getClass = (name: string, functions: string): string => {
     `;
 }
 
+const getImports = () => {
+    return `
+        import { utils } from 'ethers';
+    `;
+}
+
 const generate = () => {
-    //console.log(path.resolve('./dist/abis'))
     const contractsPath = path.join(__dirname, '../.contracts');
     fsExtra.ensureDirSync(contractsPath);
-    console.log(__dirname)
     const abiDir = path.join(__dirname, '../abis');
     const abis = fs.readdirSync(abiDir).filter((f: string) => f.endsWith('.json'));
-    console.log(abis)
     const contractMeta = abis.reduce((contractMeta: {contractClasses: string, nameToABI: {[key: string]: string}[]}, abiFile: string) => {
         const [name, contractClass] = parsedABI(path.resolve(abiDir, abiFile))
-        console.log(__dirname)
         return {
             contractClasses: contractMeta.contractClasses + contractClass,
             nameToABI: {...contractMeta.nameToABI,  [name]: path.join(__dirname, '../.contracts/abis', abiFile) }
         };
     }, {
-        contractClasses: '',
+        contractClasses: getImports(),
         nameToABI: {},
     })
     
@@ -122,18 +125,7 @@ const generate = () => {
     try {
         fsExtra.writeFileSync(path.join(__dirname, '../.contracts/index.js'), prettier.format(contractMeta.contractClasses));
         fsExtra.copySync(path.resolve(abiDir), path.join(__dirname, '../.contracts/abis'), { overwrite: true });
-        fsExtra.writeFileSync(path.join(__dirname, '../.contracts/map.json'), JSON.stringify(contractMeta.nameToABI));
-
-        fs.readFile(path.join(__dirname, '../utils/abi.js'), 'utf-8', function(err, data) {
-            if (err) throw err;
-        
-            const abiSet = data.replace("const abisMap = '{}'", `const abisMap = ${JSON.stringify(contractMeta.nameToABI)}`);
-            fs.writeFile(path.join(__dirname, '../utils/abi.js'), abiSet, 'utf-8', function(err, data) {
-                if (err) throw err;
-                console.log('succeded!');
-            })
-        })
-      } catch (err) {
+    } catch (err) {
         console.error(err);
     }
 }

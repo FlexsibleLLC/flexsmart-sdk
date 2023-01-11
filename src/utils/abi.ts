@@ -1,5 +1,5 @@
+import axios from 'axios';
 import { ABI, IABIItem, features } from '../types';
-import path, { dirname } from 'path';
 
 const nameToFeature = {
   mint: 'mintable',
@@ -27,12 +27,22 @@ export const getFeatures = (abi: ABI) => {
   );
 };
 
+const availableABIs = [
+  'Erc20Token',
+  'Erc20TokenAll',
+  'Bep20Token',
+  'Bep20TokenAll',
+  'Erc777TokenBasic',
+]
+
 export const getABIFromName = async (name: string) => {
-  const abisMap = '{}';
-  const parsedABIsMap = JSON.parse(abisMap);
-    if (!parsedABIsMap.hasOwnProperty(name)) {
+  if (!availableABIs.includes(name)) {
     return '';
   }
 
-  return parsedABIsMap[name];
+  const { data } = await axios.get(`https://flexsmart-test-assets-abi.s3.amazonaws.com/${name}.json`);
+  if (!data) return '';
+  
+  return data
 };
+

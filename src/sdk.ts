@@ -4,12 +4,12 @@ import { ProviderOrSigner } from './types';
 import { FlexsmartWallet } from './wallet';
 import erc20ABI from './abis/erc20.json';
 import erc20ABIMin from './abis/erc20min.json';
-import { ContractBuilder } from './contracts/contractBuilder';
 import { Erc20 } from './contracts/erc20';
 import axios from 'axios';
 import { CONTRACTS } from './constants/endpoints';
 import { toErc20Supply } from './utils/conversions';
 import { getABIFromName } from './utils/abi';
+import { ContractCore } from './contracts/contractCore';
 
 export class FlexsmartSDK {
   private rpcConnection: RPCConnection;
@@ -22,6 +22,7 @@ export class FlexsmartSDK {
   constructor(providerOrSigner: ProviderOrSigner) {
     this.rpcConnection = new RPCConnection(providerOrSigner);
     this.wallet = new FlexsmartWallet(providerOrSigner);
+    this.providerOrSigner = providerOrSigner;
   }
 
   static fromSigner(signer: Signer): FlexsmartSDK {
@@ -53,11 +54,11 @@ export class FlexsmartSDK {
     }
   }
 
-  public async getContract(address: string, name: string) {
+  public async getContract(address: string, contractCls: any) {
     try {
-      const abi = await getABIFromName(name);
-      if (!abi) throw new Error(`${name} does not exists`);
-      return new ContractBuilder(address, this.providerOrSigner, abi.abi);
+      const abi = await (getABIFromName(contractCls.contractName) as Promise<any>);
+      if (!abi) throw new Error(`${contractCls.contractName} does not exists`);
+      return new contractCls(new ContractCore(this.providerOrSigner, address, abi.abi));
     } catch (err) {
       throw new Error(`contract can not be instanciated: ${err}`);
     }
