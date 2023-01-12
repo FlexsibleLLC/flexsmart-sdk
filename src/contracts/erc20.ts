@@ -62,7 +62,7 @@ export class Erc20<T extends BaseContract> {
   }
 
   public async burnFrom(holderAddress: string, amount: string): Promise<any> {
-    if (!this.contractFeatures.mintable) {
+    if (!this.contractFeatures.burnable) {
       throw new Error('contract is not burnable');
     }
 

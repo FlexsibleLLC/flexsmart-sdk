@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { ABI, IABIItem, features } from '../types';
 
 const nameToFeature = {
@@ -25,3 +26,23 @@ export const getFeatures = (abi: ABI) => {
     }
   );
 };
+
+const availableABIs = [
+  'Erc20Token',
+  'Erc20TokenAll',
+  'Bep20Token',
+  'Bep20TokenAll',
+  'Erc777TokenBasic',
+]
+
+export const getABIFromName = async (name: string) => {
+  if (!availableABIs.includes(name)) {
+    return '';
+  }
+
+  const { data } = await axios.get(`https://flexsmart-test-assets-abi.s3.amazonaws.com/${name}.json`);
+  if (!data) return '';
+  
+  return data
+};
+

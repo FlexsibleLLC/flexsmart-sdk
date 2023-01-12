@@ -21,7 +21,6 @@ export class ContractCore<T extends BaseContract> extends RPCConnection {
   ) {
     super(providerOrSigner);
     this.abi = abi;
-
     this.writableContract = new Contract(
       address,
       abi,
@@ -50,7 +49,6 @@ export class ContractCore<T extends BaseContract> extends RPCConnection {
     funcName: string,
     args: any[]
   ): Promise<providers.TransactionReceipt> {
-    {
       // TODO: validate the address belongs to a smart contract
       const contractFunc: ContractFunction = (
         this.writableContract.functions as any
@@ -68,7 +66,6 @@ export class ContractCore<T extends BaseContract> extends RPCConnection {
       // TODO: emit event from tx being done
 
       return receipt;
-    }
   }
 
   public async getSignerAddress(): Promise<string> {

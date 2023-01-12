@@ -1,4 +1,5 @@
 node_modules
 dist
+.flexsmart-sdk
 
 .DS_Store
