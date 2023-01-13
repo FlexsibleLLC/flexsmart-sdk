@@ -1,7 +1,22 @@
+#! /usr/bin/env node
+
 const fs = require('fs');
 const fsExtra = require('fs-extra');
 const prettier = require('prettier');
 const path = require('path');
+const yargs = require('yargs');
+const chalk = require("chalk");
+const boxen = require("boxen");
+
+const boxenOptions = {
+    borderStyle: "classic",
+    borderColor: "blue",
+    backgroundColor: "#555",
+    padding: 2, 
+    title: 'Flexsmart SDK',
+};
+
+const title = chalk.white.bold;
 
 interface IABI {
     name?: string;
@@ -107,27 +122,46 @@ const getImports = () => {
 
 const generate = () => {
     const contractsPath = path.join(__dirname, '../.contracts');
+    const creatingDirText = title('Creating contracts dir...');
+    const mBox = boxen( creatingDirText, boxenOptions );
+    console.log(mBox);
+
     fsExtra.ensureDirSync(contractsPath);
     const abiDir = path.join(__dirname, '../abis');
     const abis = fs.readdirSync(abiDir).filter((f: string) => f.endsWith('.json'));
     const contractMeta = abis.reduce((contractMeta: {contractClasses: string, nameToABI: {[key: string]: string}[]}, abiFile: string) => {
-        const [name, contractClass] = parsedABI(path.resolve(abiDir, abiFile))
+        const [name, contractClass] = parsedABI(path.resolve(abiDir, abiFile));
+        const generatingContractText = title(`Generating ${name} contract`);
+        const mBox = boxen( generatingContractText, boxenOptions );
+        console.log(mBox);
+
         return {
             contractClasses: contractMeta.contractClasses + contractClass,
-            nameToABI: {...contractMeta.nameToABI,  [name]: path.join(__dirname, '../.contracts/abis', abiFile) }
         };
     }, {
         contractClasses: getImports(),
         nameToABI: {},
     })
     
-    
     try {
-        fsExtra.writeFileSync(path.join(__dirname, '../.contracts/index.js'), prettier.format(contractMeta.contractClasses));
-        fsExtra.copySync(path.resolve(abiDir), path.join(__dirname, '../.contracts/abis'), { overwrite: true });
+        const savingContractText = title(`Saving contracts to a file`);
+        const mBox = boxen( savingContractText, boxenOptions );
+        console.log(mBox);
+
+        fsExtra.writeFileSync(path.join(__dirname, '../.contracts/index.js'), prettier.format(contractMeta.contractClasses, {parser: 'babel'}));        
+        const done = boxen( title('Done!'), boxenOptions );
+        console.log(done);
     } catch (err) {
         console.error(err);
     }
 }
 
-generate();
+
+yargs.scriptName("flexsmart")
+    .usage('$0 <cmd>')
+    .command('generate', 'Generate contracts from ABIs', (yargs) => {
+        generate();
+    })
+    .help()
+    .argv;
+
