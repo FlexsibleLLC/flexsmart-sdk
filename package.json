@@ -1,7 +1,7 @@
 {
-  "name": "@flexsible/flexsmart-sdk",
+  "name": "@flexsmart/flexsmart-sdk",
   "version": "0.0.1",
-  "description": "",
+  "description": "- Add network update listener/trigger - Add events - Add tests",
   "module": "dist/index.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -32,6 +32,14 @@
     "@types/yargs": "^17.0.19"
   },
   "bin": {
-    "flexsmart": "./dist/generate/utils.js"
-  }
+    "flexsmart": "dist/generate/utils.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FlexsibleLLC/flexsmart-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FlexsibleLLC/flexsmart-sdk/issues"
+  },
+  "homepage": "https://github.com/FlexsibleLLC/flexsmart-sdk#readme"
 }
