@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "assert": "^2.0.0",
     "axios": "^1.2.1",
     "bignumber.js": "^9.1.1",
     "boxen": "4.0",

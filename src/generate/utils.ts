@@ -1,5 +1,6 @@
 #! /usr/bin/env node
 
+const assert = require('node:assert');
 const fs = require('fs');
 const fsExtra = require('fs-extra');
 const prettier = require('prettier');
@@ -12,7 +13,7 @@ const boxenOptions = {
     borderStyle: "classic",
     borderColor: "blue",
     backgroundColor: "#555",
-    padding: 2, 
+    padding: 1, 
     title: 'Flexsmart SDK',
 };
 
@@ -31,6 +32,10 @@ interface IFormattedABI {
     inputs: { [key: string]: { type: string } }[];
     stateMutability?: string;
 }
+
+interface IABIReducer {
+    [key: string]: string 
+};
 
 // TODO: use this to generate type def
 const solidityTS = {'bool': 'boolean', 'address': 'string'};
@@ -54,7 +59,7 @@ const parsedABI = (abiFile: string) => {
             abiLine.name,
             inputs, 
             ['pure', 'view'].includes(abiLine.stateMutability),
-            abiLine.outputs?.some((o) => o.type.includes('int'))
+            abiLine.name !== 'decimals' && abiLine.outputs?.some((o) => o.type.includes('int'))
         );
         return acc + abiFunc;
     }, '');
@@ -120,48 +125,80 @@ const getImports = () => {
     `;
 }
 
-const generate = () => {
+const getExports = (contractsDir: string) => {
+    const contracts = fs.readdirSync(contractsDir)
+        .filter((f: string) => f.endsWith('.js') && f !== 'index.js')
+        .map((f: string) => f.replace('.js', ''));
+    return contracts.reduce((acc: string, contract: string) => (
+        acc + `\nexport { ${contract} } from './${contract}.js';`
+    ), '');
+}
+
+const logBox = (text) => {
+    console.log(boxen(title(text), boxenOptions));
+}
+
+const generateContracts = (abis) => {
     const contractsPath = path.join(__dirname, '../.contracts');
-    const creatingDirText = title('Creating contracts dir...');
-    const mBox = boxen( creatingDirText, boxenOptions );
-    console.log(mBox);
-
+    logBox('Creating contracts dir...');
     fsExtra.ensureDirSync(contractsPath);
-    const abiDir = path.join(__dirname, '../abis');
-    const abis = fs.readdirSync(abiDir).filter((f: string) => f.endsWith('.json'));
-    const contractMeta = abis.reduce((contractMeta: {contractClasses: string, nameToABI: {[key: string]: string}[]}, abiFile: string) => {
-        const [name, contractClass] = parsedABI(path.resolve(abiDir, abiFile));
-        const generatingContractText = title(`Generating ${name} contract`);
-        const mBox = boxen( generatingContractText, boxenOptions );
-        console.log(mBox);
 
+    // Parse ABIs and generate classes
+    const contractMeta = abis.reduce((acc: IABIReducer, abiFile: string) => {
+        const [name, contractClass] = parsedABI(abiFile);
+        logBox(`Generating ${name} contract`);
         return {
-            contractClasses: contractMeta.contractClasses + contractClass,
+            ...acc,
+            [name]: getImports() + contractClass,
         };
-    }, {
-        contractClasses: getImports(),
-        nameToABI: {},
-    })
-    
-    try {
-        const savingContractText = title(`Saving contracts to a file`);
-        const mBox = boxen( savingContractText, boxenOptions );
-        console.log(mBox);
+    }, {});
 
-        fsExtra.writeFileSync(path.join(__dirname, '../.contracts/index.js'), prettier.format(contractMeta.contractClasses, {parser: 'babel'}));        
-        const done = boxen( title('Done!'), boxenOptions );
-        console.log(done);
+    try {
+        logBox('Saving contracts to files');
+        Object.entries(contractMeta)
+            .forEach(([name, content]) => {
+                fsExtra.writeFileSync(path.join(__dirname, `../.contracts/${name}.js`), prettier.format(content, { parser: 'babel' }));
+                logBox(`Contract ${name}.js successfully created.`);
+            });
+        const exports = prettier.format(getExports(contractsPath), { parser: 'babel' });
+        fsExtra.writeFileSync(path.join(__dirname, `../.contracts/index.js`), exports);
+        logBox('Done!');
     } catch (err) {
         console.error(err);
     }
 }
 
+const generate = () => {
+    const abiDir = path.join(__dirname, '../abis');
+    const abis = fs.readdirSync(abiDir)
+        .filter((f: string) => f.endsWith('.json'))
+        .map((file: string) => path.resolve(abiDir, file));
+    generateContracts(abis);
+}
+
+const generateFromAbiFile = (abiFile: string) => {
+    assert(fsExtra.pathExistsSync(abiFile), 'ABI file not found.');
+    generateContracts([
+        abiFile
+    ])
+}
 
 yargs.scriptName("flexsmart")
     .usage('$0 <cmd>')
-    .command('generate', 'Generate contracts from ABIs', (yargs) => {
-        generate();
+    .command('generate [file]', 'Generate a contract class from the given ABI', function (yargs) {
+        yargs.positional('file', {
+            describe: 'JSON file containing an ABI.',
+            type: 'string',
+            default: '',
+        })
+    }, (yargs) => {
+        if (yargs.file) {
+            generateFromAbiFile(yargs.file);
+        } else {
+            generate();
+        }
     })
+    .demandCommand(1)
     .help()
     .argv;
 
