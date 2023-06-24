@@ -24,7 +24,7 @@
     "fs-extra": "^11.1.0",
     "prettier": "^2.8.1",
     "typescript": "^4.8.4",
-    "yargs": "13.2"
+    "yargs": "13.3"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
