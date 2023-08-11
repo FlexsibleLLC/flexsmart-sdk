@@ -11,10 +11,11 @@ import erc777ABIMin from './abis/erc777min.json';
 import escrowABI from './abis/escrow.json';
 import { Erc20 } from './contracts/erc20';
 import axios from 'axios';
-import { CONTRACTS, ESCROWS } from './constants/endpoints';
+import { CONTRACTS, ESCROWS, APIKEY_VALIDATE } from './constants/endpoints';
 import { toErc20Supply } from './utils/conversions';
 import { getABIFromName } from './utils/abi';
 import { ContractCore } from './contracts/contractCore';
+import { Errors } from './constants/errors';
 import { getErc20ContractAddress } from './constants/tokenAddress';
 import { ERC20_ADDRESS_PLACEHOLDER, libraryAddressesByChainId } from './constants/escrowLib';
 
@@ -24,6 +25,7 @@ export class FlexsmartSDK {
   public wallet: FlexsmartWallet;
   private contractsCache = new Map<string, Erc20<BaseContract>>();
   private apiKey: string;
+  private validApiKey = false;
   private env = 'local';
 
   constructor(providerOrSigner: ProviderOrSigner) {
@@ -73,6 +75,7 @@ export class FlexsmartSDK {
 
   public setAPIKey(apiKey: string) {
     this.apiKey = apiKey;
+    this.validApiKey = false;
   }
 
   public setEnv(env: string) {
@@ -81,13 +84,38 @@ export class FlexsmartSDK {
 
   static envURLs =  {
     local: 'http://localhost:3000',
-    dev: '',
-    prod: '',
+    dev: 'https://dev-hub.flexsmart.io',
+    prod: 'https://hub.flexsmart.io',
+    edu: 'https://edu.flexsmart.io',
   };
 
   private getURL(): string {
     if (!Object.keys(FlexsmartSDK.envURLs).includes(this.env)) throw new Error('invalid environment.')
     return FlexsmartSDK.envURLs[this.env];
+  }
+
+  private async validateKey(): Promise<boolean> {
+    if (!this.apiKey) {
+      // @ts-ignore
+      throw new Error('API key is required.', { cause: Errors.MissingApiKey });
+    }
+    if (this.validApiKey) {
+      return true;
+    }
+    try {
+      const result = await axios.get(`${this.getURL()}${APIKEY_VALIDATE}`, {
+        withCredentials: true,
+        headers: {
+          'x-api-key': this.apiKey,
+        },
+      });
+      this.validApiKey = result.status === 200;
+      if (this.validApiKey) {
+        return this.validApiKey;
+      }
+    } catch(error) {}
+    // @ts-ignore
+    throw new Error('The given API key is invalid', { cause: Errors.InvalidApiKey });
   }
 
   private saveContract(contract: DeployedContract): Promise<any> {
@@ -102,6 +130,7 @@ export class FlexsmartSDK {
       transaction,
       status,
       isFullFeature,
+      source: 1,
     }, {
       withCredentials: true,
       headers: {
@@ -109,11 +138,17 @@ export class FlexsmartSDK {
       }
     });
   }
+  
+  private withValidKey = (next) => async (...props) => {
+    const isValid = await this.validateKey()
+    if (isValid) {
+      return next(...props)
+    }
+  }
 
   // TODO: find a better place for this function
-  public async deployERC20(props: CreateContract) {
+  private _deployERC20 = async (props: CreateContract) => {
     const { name, symbol, initialSupply = 0.0, decimals = 18, isFullFeature } = props;
-    if (!this.apiKey) throw new Error('API key is required');
     try {
       const abi = isFullFeature ? erc20ABI : erc20ABIMin;
       const supply = toErc20Supply(initialSupply, decimals);
@@ -134,19 +169,17 @@ export class FlexsmartSDK {
         status: 'submitted',
         isFullFeature,
       });
-    } catch(err) {
-      throw new Error(err);
+    } catch(error) {
+      throw error;
     }
   }
 
   // TODO: find a better place for this function
-  public async deployERC777(props: CreateContract) {
+  private _deployERC777 = async (props: CreateContract) => {
     const { name, symbol, initialSupply = 0.0, decimals = 18 } = props;
-    if (!this.apiKey) throw new Error('API key is required');
     try {
       const abi = erc777ABIMin;
       const supply = toErc20Supply(initialSupply, decimals);
-      console.log('supply', supply);
       const erc20Factory = new ContractFactory(abi.abi, abi.bytecode, this.rpcConnection.getSigner());
       const contract =  await erc20Factory.deploy(name, symbol, supply);
       const chainId = await this.rpcConnection.getSigner().getChainId();
@@ -164,15 +197,14 @@ export class FlexsmartSDK {
         status: 'submitted',
         isFullFeature: false,
       });
-    } catch(err) {
-      throw new Error(err);
+    } catch(error) {
+      throw error;
     }
   }
 
   // TODO: find a better place for this function
-  public async deployBEP20(props: CreateContract) {
+  private _deployBEP20 = async (props: CreateContract) => {
     const { name, symbol, initialSupply = 0.0, decimals = 18, isFullFeature } = props;
-    if (!this.apiKey) throw new Error('API key is required');
     try {
       const abi = isFullFeature ? bep20ABI : bep20ABIMin;
       const supply = toErc20Supply(initialSupply, decimals);
@@ -193,14 +225,13 @@ export class FlexsmartSDK {
         status: 'submitted',
         isFullFeature,
       });
-    } catch(err) {
-      throw new Error(err);
+    } catch(error) {
+      throw error;
     }
   }
 
   // TODO: find a better place for this function
-  public async deployEscrow(props: CreateEscrow) {
-    if (!this.apiKey) throw new Error('API key is required');
+  private _deployEscrow = async (props: CreateEscrow) => {
     try {
       const {
         arbiterAddress,
@@ -262,8 +293,13 @@ export class FlexsmartSDK {
           'x-api-key': this.apiKey,
         }
       });
-    } catch(err) {
-      throw new Error(err);
+    } catch(error) {
+      throw error;
     }
   }
+
+  public deployERC20 = this.withValidKey(this._deployERC20)
+  public deployERC777 = this.withValidKey(this._deployERC777)
+  public deployBEP20 = this.withValidKey(this._deployBEP20)
+  public deployEscrow = this.withValidKey(this._deployEscrow)
 }

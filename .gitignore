@@ -1,5 +1,6 @@
 node_modules
 dist
+dist_bundle
 .flexsmart-sdk
 
 .DS_Store

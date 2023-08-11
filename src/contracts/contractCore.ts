@@ -24,7 +24,7 @@ export class ContractCore<T extends BaseContract> extends RPCConnection {
     this.writableContract = new Contract(
       address,
       abi,
-      this.getSigner() || this.getProvider()
+      this.getSignerOrProvider()
     ) as T;
 
     this.readonlyContract = this.writableContract.connect(
@@ -55,16 +55,10 @@ export class ContractCore<T extends BaseContract> extends RPCConnection {
       )[funcName];
 
       let transaction: ContractTransaction;
-      try {
-        transaction = await contractFunc(...args);
-      } catch (e) {
-        // TODO: handle error
-      }
-
+      transaction = await contractFunc(...args);
       // TODO: emit event from tx being in progress transaction
       const receipt = transaction.wait();
       // TODO: emit event from tx being done
-
       return receipt;
   }
 

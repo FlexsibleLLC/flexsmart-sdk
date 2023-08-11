@@ -23,7 +23,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -
 
-## [0.0.1]
+## [0.0.3]
+
+### Added
+
+- Webpack to build bundle JS file
+- Wrapper function to validate API Key
+- Predefined Errors
+
+### Changed
+
+- Call function to get Signer or Provider from the ContractCore
+
+### Removed
+
+- Try/catch block from the "sendTransaction" function on ContractCore.ts
+
+## [0.0.2]
 
 ### Added
 
@@ -42,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deploy ERC20 token
 - Utility to generate contract classes
 
-[unreleased]: https://github.com/FlexsibleLLC/flexsmart-app/compare/v0.0.2...HEAD
+[unreleased]: https://github.com/FlexsibleLLC/flexsmart-app/compare/v0.0.3...HEAD
+[0.0.2]: https://github.com/FlexsibleLLC/flexsmart-app/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/FlexsibleLLC/flexsmart-app/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/FlexsibleLLC/flexsmart-app/compare/v0.0.1...HEAD
