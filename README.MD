@@ -86,7 +86,7 @@ For wallet-based deployment, connect your signer to one of these Polygon network
 ### Deploy on Polygon
 You can deploy contracts via the SDK and manage them later on the [FlexSmart](https://hub.flexsmart.io) platform.
 
-Deploy an ERC20 token on Polygon:
+Deploy a tokenization contract on Polygon:
 ```js
 import { FlexsmartSDK } from '@flexsmart/flexsmart-sdk';
 
@@ -117,7 +117,7 @@ const result = await sdk.deployERC777({
 });
 ```
 
-When connected to Polygon Mainnet or Polygon Amoy, ERC20 and ERC777 deployments are saved with:
+When connected to Polygon Mainnet or Polygon Amoy, tokenization and ERC777 deployments are saved with:
 
 - `chain: 'polygon'`
 - `network: '0x89'` for Polygon Mainnet
@@ -219,7 +219,7 @@ npx flexsmart generate /path/to/the/contractABI.json
 ### Manage Contracts
 You can manage deployed contracts with the FlexSmart SDK.
 
-Manage an ERC20 token:
+Manage a tokenization contract:
 ```js
 import { Erc20TokenAll } from '@flexsmart/flexsmart-sdk/dist/.contracts';
 
