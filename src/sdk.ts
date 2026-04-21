@@ -17,6 +17,7 @@ import { getABIFromName } from './utils/abi';
 import { ContractCore } from './contracts/contractCore';
 import { getErc20ContractAddress } from './constants/tokenAddress';
 import { ERC20_ADDRESS_PLACEHOLDER, libraryAddressesByChainId } from './constants/escrowLib';
+import { getContractChainByChainId } from './constants/networks';
 
 export class FlexsmartSDK {
   private rpcConnection: RPCConnection;
@@ -127,7 +128,7 @@ export class FlexsmartSDK {
         name,
         symbol,
         type: ContractType.erc20,
-        chain: ContractChain.ethereum,
+        chain: getContractChainByChainId(chainId),
         network: chanInHex,
         initialSupply: supply,
         transaction: contract.deployTransaction.hash,
@@ -157,7 +158,7 @@ export class FlexsmartSDK {
         name,
         symbol,
         type: ContractType.erc777,
-        chain: ContractChain.ethereum,
+        chain: getContractChainByChainId(chainId),
         network: chanInHex,
         initialSupply: supply,
         transaction: contract.deployTransaction.hash,
@@ -179,6 +180,10 @@ export class FlexsmartSDK {
       const erc20Factory = new ContractFactory(abi.abi, abi.bytecode, this.rpcConnection.getSigner());
       const contract =  await erc20Factory.deploy(name, symbol, supply);
       const chainId = await this.rpcConnection.getSigner().getChainId();
+      assert.ok(
+        getContractChainByChainId(chainId) === ContractChain.binance,
+        'BEP20 deployments require a Binance network.'
+      );
       const chanInHex = utils.hexlify(chainId);
       // TODO: find out the right order to handle this transactionally, if one of them fail make them all fail
       // TODO: make this url point to our dev
@@ -186,7 +191,7 @@ export class FlexsmartSDK {
         name,
         symbol,
         type: ContractType.bep20,
-        chain: ContractChain.binance,
+        chain: getContractChainByChainId(chainId),
         network: chanInHex,
         initialSupply: supply,
         transaction: contract.deployTransaction.hash,

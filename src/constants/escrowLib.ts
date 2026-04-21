@@ -9,12 +9,18 @@ export const libraryAddressesByChainId: EscrowLibAddress = {
     networkName: 'bsctestnet',
     address: '0x215b1029F9132ce28Aed51785F58caC522c4A79F',
   },
-  '0x5': {
-    networkName: 'goerli',
-    address: '0x505cFC51E2b4141A22526E008d278dbBb82dad38',
-  },
   '0xaa36a7': {
     networkName: 'sepolia',
     address: '0x83cde6926b37ddc42e2aa1010a920643f81487f4',
   },
+};
+
+export const registerEscrowLibraryAddress = (
+  chainIdHex: string,
+  networkName: string,
+  address: string
+): { networkName: string; address: string } => {
+  const libraryAddress = { networkName, address };
+  libraryAddressesByChainId[chainIdHex] = libraryAddress;
+  return libraryAddress;
 };

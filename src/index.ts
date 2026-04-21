@@ -5,5 +5,8 @@ import './abis/erc20.json';
 import './abis/erc777min.json';
 
 export * from './types';
+export * from './constants/networks';
+export * from './constants/tokenAddress';
+export * from './constants/escrowLib';
 export { Erc20 } from './contracts/erc20';
 export { FlexsmartSDK } from './sdk';

@@ -32,6 +32,7 @@ export enum ContractType {
 export enum ContractChain {
   ethereum = 'ethereum',
   binance = 'binance',
+  polygon = 'polygon',
 }
 
 export type DeployedContract = {
@@ -86,4 +87,15 @@ export interface CreateEscrowBody {
   description: string;
   erc20ContractToken: string;
   transaction: string;
+}
+
+export interface SupportedNetwork {
+  name: string;
+  chainId: number;
+  chainIdHex: string;
+  rpcUrl: string;
+  currencySymbol: string;
+  blockExplorerUrl: string;
+  faucetUrl?: string;
+  chain: ContractChain;
 }
